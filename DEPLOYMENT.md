@@ -25,6 +25,21 @@ This project currently uses:
    - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 3. Health Check Path: `/health`
 
+### Critical Path Check (fixes your error)
+If you see:
+
+`ERROR: Could not open requirements file: [Errno 2] No such file or directory: 'requirements.txt'`
+
+Render is building from the wrong directory. Use one of these two valid setups:
+
+- Preferred:
+  - Root Directory: `backend`
+  - Build Command: `pip install -r requirements.txt`
+  - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Fallback (if Root Directory is left blank):
+  - Build Command: `pip install -r requirements.txt` (root `requirements.txt` proxies to `backend/requirements.txt`)
+  - Start Command must still be run from backend context, so set Root Directory to `backend` to avoid import issues.
+
 ### Required Backend Environment Variables
 Set these in Render:
 
@@ -83,6 +98,7 @@ Expected keys:
 ### Backend
 - Install: `pip install -r requirements.txt`
 - Start: `uvicorn app.main:app --host 0.0.0.0 --port 5000`
+- Import test: `python -c "from uvicorn.importer import import_from_string; import_from_string('app.main:app'); print('ok')"`
 
 ### Auth Smoke Tests
 1. Login from frontend.
@@ -104,6 +120,9 @@ Expected keys:
   - Confirm `Authorization: Bearer <token>` is sent.
 - **Frontend hitting wrong API**
   - Confirm `VITE_API_URL` is set in Vercel and redeploy.
+- **requirements.txt not found on Render**
+  - Confirm Root Directory is `backend`.
+  - Keep Build Command as `pip install -r requirements.txt`.
 
 ## 8) Security Checklist
 

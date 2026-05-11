@@ -11,7 +11,6 @@ from app.database.db import Base
 from app.routes.tool_routes import router as tool_router
 from app.routes.auth import router as auth_router
 
-Base.metadata.create_all(bind=engine)
 logger = logging.getLogger("tool-management-api")
 logging.basicConfig(level=logging.INFO)
 
@@ -39,6 +38,19 @@ app.add_middleware(
 # Include routers
 app.include_router(tool_router)
 app.include_router(auth_router)
+
+
+@app.on_event("startup")
+def initialize_database():
+    """Initialize database tables on service startup."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database initialization completed")
+    except Exception as exc:
+        logger.exception("Database initialization failed: %s", exc)
+        # Surface failure explicitly so Render marks deploy unhealthy.
+        raise
+
 
 @app.get("/")
 def home():
