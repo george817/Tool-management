@@ -2,7 +2,7 @@
 
 from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.sql import func
-from . import Base  # Import Base from same package
+from app.database.db import Base  # Import Base from same package
 
 class Asset(Base):
     __tablename__ = "assets"
