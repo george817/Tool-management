@@ -42,13 +42,41 @@ app.include_router(auth_router)
 
 @app.on_event("startup")
 def initialize_database():
-    """Initialize database tables on service startup."""
+    """Initialize database tables and seed default users on service startup."""
     try:
+        # Ensure tables exist
         Base.metadata.create_all(bind=engine)
         logger.info("Database initialization completed")
+        logger.info("Database connected")
+        # Seed default users (idempotent)
+        from app.models.user import RoleEnum, User
+        from passlib.context import CryptContext
+        from sqlalchemy.orm import Session
+        crypt = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        default_password = "password123"
+        default_users = [
+            {"email": "operator@assetops.com", "name": "Operator", "role": RoleEnum.OPERATOR},
+            {"email": "manager@assetops.com", "name": "Manager", "role": RoleEnum.MANAGER},
+            {"email": "director@assetops.com", "name": "Director", "role": RoleEnum.DIRECTOR},
+            {"email": "admin@assetops.com", "name": "Admin", "role": RoleEnum.ADMIN},
+        ]
+        with Session(bind=engine) as session:
+            for u in default_users:
+                existing = session.query(User).filter_by(email=u["email"]).first()
+                if not existing:
+                    hashed = crypt.hash(default_password)
+                    user = User(
+                        name=u["name"],
+                        email=u["email"],
+                        password_hash=hashed,
+                        role=u["role"],
+                    )
+                    session.add(user)
+                    logger.info(f"Seeded user {user.email} with role {user.role}")
+            session.commit()
+        logger.info("User seeding completed")
     except Exception as exc:
         logger.exception("Database initialization failed: %s", exc)
-        # Surface failure explicitly so Render marks deploy unhealthy.
         raise
 
 
