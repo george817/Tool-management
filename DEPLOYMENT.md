@@ -84,10 +84,18 @@ Expected keys:
 - `ACCESS_TOKEN_EXPIRE_MINUTES=1440`
 - `ALLOWED_ORIGINS=...`
 
+Recommended split:
+- `backend/.env.local` for localhost PostgreSQL
+- `backend/.env.production` for Supabase/Render values
+
 ### frontend/.env
 Expected keys:
 
 - `VITE_API_URL=`
+
+Recommended split:
+- `frontend/.env.local` for local backend (`http://localhost:5000`)
+- `frontend/.env.production` for Render backend URL
 
 ## 6) Build and Verification
 

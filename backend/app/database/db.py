@@ -55,3 +55,6 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
+from app.models.asset import Asset
+from app.models.transaction import Transaction
+from app.models.activity_log import ActivityLog

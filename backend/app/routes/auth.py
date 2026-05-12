@@ -1,6 +1,8 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
+import os
+from urllib.parse import urlparse
 from app.database.db import SessionLocal
 from app.schemas.auth_schema import LoginRequest, TokenResponse, UserResponse
 from app.services.auth_service import AuthService
@@ -99,3 +101,17 @@ async def validate_token_get(current_user: User = Depends(get_current_user)):
 async def get_me(current_user: User = Depends(get_current_user)):
     """Get current authenticated user profile."""
     return UserResponse.model_validate(current_user)
+
+
+@router.get("/debug-source")
+async def debug_source():
+    """Debug endpoint to confirm active backend environment and DB host."""
+    database_url = os.getenv("DATABASE_URL", "")
+    parsed = urlparse(database_url) if database_url else None
+    hostname = parsed.hostname if parsed else None
+    return {
+        "environment": os.getenv("NODE_ENV", "development"),
+        "database_host": hostname or "not-configured",
+        "database_name": (parsed.path or "").lstrip("/") if parsed else "not-configured",
+        "has_database_url": bool(database_url),
+    }
